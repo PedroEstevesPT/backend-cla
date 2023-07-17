@@ -1,4 +1,4 @@
-# Backend Engineer Challenge by Pedro Esteves
+# Backend Engineer Challenge
 
 ## Index
 
