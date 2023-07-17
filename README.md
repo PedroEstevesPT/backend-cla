@@ -1,86 +1,121 @@
-# Backend Engineering Challenge
+# Unbabel Backend Engineer Challenge by Pedro Esteves
 
+## Index
 
-Welcome to our Engineering Challenge repository 🖖
+1. [How to Install Command Line Application](#how-to-install-command-line-application)
+2. [How to Use the Command Line Application](#how-to-use)
+3. [Algorithm Complexity](#algorithm-complexity)
+4. [Implementation Notes](#implementation-notes)
+5. [Tests](#tests)
+6. [Test List](#test-list)
 
-If you found this repository it probably means that you are participating in our recruitment process. Thank you for your time and energy. If that's not the case please take a look at our [openings](https://unbabel.com/careers/) and apply!
+## How to Install Command Line Application
 
-Please fork this repo before you start working on the challenge, read it careful and take your time and think about the solution. Also, please fork this repository because we will evaluate the code on the fork.
+Check if you have the virtualenv package installed by running the following command:
 
-This is an opportunity for us both to work together and get to know each other in a more technical way. If you have any questions please open and issue and we'll reach out to help.
+``` virtualenv --version``` 
 
-Good luck!
+If you do not have it, you can install it with:
 
-## Challenge Scenario
+``` pip install virtualenv ``` 
 
-At Unbabel we deal with a lot of translation data. One of the metrics we use for our clients' SLAs is the delivery time of a translation. 
+Then, create a virtual environment with:
 
-In the context of this problem, and to keep things simple, our translation flow is going to be modeled as only one event.
+```  virtualenv -p python3.7 venv ``` 
 
-### *translation_delivered*
+Activate the virtual environment on Linux/Mac:
 
-Example:
+``` source venv/bin/activate ``` 
 
-```json
-{
-	"timestamp": "2018-12-26 18:12:19.903159",
-	"translation_id": "5aa5b2f39f7254a75aa4",
-	"source_language": "en",
-	"target_language": "fr",
-	"client_name": "airliberty",
-	"event_name": "translation_delivered",
-	"duration": 20,
-	"nr_words": 100
-}
-```
+Install project dependencies:
 
-## Challenge Objective
+```  pip install -r requirements.txt ``` 
 
-Your mission is to build a simple command line application that parses a stream of events and produces an aggregated output. In this case, we're interested in calculating, for every minute, a moving average of the translation delivery time for the last X minutes.
+Deactivate the virtual environment:
 
-If we want to count, for each minute, the moving average delivery time of all translations for the past 10 minutes we would call your application like (feel free to name it anything you like!).
+```  deactivate ``` 
 
-	unbabel_cli --input_file events.json --window_size 10
-	
-The input file format would be something like:
+## How to Use:
 
-	{"timestamp": "2018-12-26 18:11:08.509654","translation_id": "5aa5b2f39f7254a75aa5","source_language": "en","target_language": "fr","client_name": "airliberty","event_name": "translation_delivered","nr_words": 30, "duration": 20}
-	{"timestamp": "2018-12-26 18:15:19.903159","translation_id": "5aa5b2f39f7254a75aa4","source_language": "en","target_language": "fr","client_name": "airliberty","event_name": "translation_delivered","nr_words": 30, "duration": 31}
-	{"timestamp": "2018-12-26 18:23:19.903159","translation_id": "5aa5b2f39f7254a75bb3","source_language": "en","target_language": "fr","client_name": "taxi-eats","event_name": "translation_delivered","nr_words": 100, "duration": 54}
+Run the Command Line App:
 
-Assume that the lines in the input are ordered by the `timestamp` key, from lower (oldest) to higher values, just like in the example input above.
+``` python unbabel_cli.py --input_file tests/inputs/test_default.json --window_size 10 --output_file tmp.json ```
 
-The output file would be something in the following format.
+You can add a flag `--print` to print the result in the CLI besides saving it on a file.
 
-```
-{"date": "2018-12-26 18:11:00", "average_delivery_time": 0}
-{"date": "2018-12-26 18:12:00", "average_delivery_time": 20}
-{"date": "2018-12-26 18:13:00", "average_delivery_time": 20}
-{"date": "2018-12-26 18:14:00", "average_delivery_time": 20}
-{"date": "2018-12-26 18:15:00", "average_delivery_time": 20}
-{"date": "2018-12-26 18:16:00", "average_delivery_time": 25.5}
-{"date": "2018-12-26 18:17:00", "average_delivery_time": 25.5}
-{"date": "2018-12-26 18:18:00", "average_delivery_time": 25.5}
-{"date": "2018-12-26 18:19:00", "average_delivery_time": 25.5}
-{"date": "2018-12-26 18:20:00", "average_delivery_time": 25.5}
-{"date": "2018-12-26 18:21:00", "average_delivery_time": 25.5}
-{"date": "2018-12-26 18:22:00", "average_delivery_time": 31}
-{"date": "2018-12-26 18:23:00", "average_delivery_time": 31}
-{"date": "2018-12-26 18:24:00", "average_delivery_time": 42.5}
-```
+``` python unbabel_cli.py --input_file tests/inputs/test_default.json --window_size 10 --output_file tmp.json --print ```
 
-#### Notes
+You can add a flag `--time` to print the execution time of the CLI.
 
-Before jumping right into implementation we advise you to think about the solution first. We will evaluate, not only if your solution works but also the following aspects:
+You can add a flag `--algorithm {deque,prefix}` to choose an algorithm to calculate the moving average. Both have a space complexity of O(n) for the average case, where n is the number of events, but the deque algorithm is better for the worst case. You can observe that by running a worst case performance test (events spaced by a big time interval):
 
-+ Simple and easy to read code. Remember that [simple is not easy](https://www.infoq.com/presentations/Simple-Made-Easy)
-+ Comment your code. The easier it is to understand the complex parts, the faster and more positive the feedback will be
-+ Consider the optimizations you can do, given the order of the input lines
-+ Include a README.md that briefly describes how to build and run your code, as well as how to **test it**
-+ Be consistent in your code. 
+``` python unbabel_cli.py --input_file tests/inputs/test_big_event_gap.json --window_size 10 --output_file tmp.json --time --algorithm deque ```
 
-Feel free to, in your solution, include some your considerations while doing this challenge. We want you to solve this challenge in the language you feel most comfortable with. Our machines run Python (3.7.x or higher) or Go (1.16.x or higher). If you are thinking of using any other programming language please reach out to us first 🙏.
+or
 
-Also, if you have any problem please **open an issue**. 
+``` python unbabel_cli.py --input_file tests/inputs/test_big_event_gap.json --window_size 10 --output_file tmp.json --time --algorithm prefix ```
 
-Good luck and may the force be with you
+If you do not use the `--algorithm` flag, the algorithm will default to deque.
+
+## Algorithm Complexity:
+
+#### Deque Algorithm (best) ####
+
+<b>Time Complexity: O(n) </b>
+- The algorithm calculates the start and end time. This step takes constant time since we know the input is sorted.
+- Creating a prefix sum array. This step has a time complexity of O(n) as it requires iterating through each event to calculate cumulative durations.
+- Iterating through each minute between the start and end time. This step takes O(m), where m is the number of minutes between the start and end time, resulting in a complexity of O(n). In the worst case, the number of minutes can dominate the time complexity, making it O(m) rather than O(n).
+- Finding events within the window takes O(k), where k is the number of events in the current window, resulting in a complexity of O(n).
+- The remaining steps have constant time complexity.
+
+<b>Space Complexity: O(n)</b>
+The deque algorithm uses a deque data structure to store the events within the window. Additionally, a prefix sum array of length n+1 is created to store the cumulative duration of the events. Therefore, the space complexity is O(n). Other variables used are constants. For limit cases where the events are spaced between days, weeks, months etc... the deque provides better memory management.
+
+#### Prefix Algorithm
+<b> Time complexity: O(n). </b>
+- The algorithm calculates the start and end time. This step takes constant time since we know the input is sorted.
+- Creating a prefix sum array. This step has a time complexity of O(n) as it requires iterating through each event to calculate cumulative durations.
+- Iterating through each minute between start and end time. This step takes O(m), where m is the number of minutes between the start and end time, resulting in a complexity of O(n). In the worst case, the number of minutes can dominate the time complexity, making it O(m) rather than O(n).
+- Finding events within the window takes O(k), where k is the number of events in the current window, resulting in a complexity of O(n).
+- The rest of the steps are constant.
+
+<b> Space complexity: O(n). </b>
+The prefix algorithm uses an array to store the cumulative duration of the events with a length of n+1, where n is the number of events. Other variables used are constants.
+
+The reason why deque algorithm is better than the prefix algorithm has to do with the first inner while condition being much faster in the deque algorithm than in the prefix:
+
+(DEQUE) 1st while condition: 
+```while window and parse(window[0]['timestamp']) <= window_low_lim:```
+(PREFIX) 1st while condition: 
+```while start_index < len_events and parse(events[start_index]['timestamp']) <= window_low_lim:```
+
+Deque while is faster because only checks if the 'window' (deque) is empty or not which can be done in constant time.
+In the cases where the events are very spaced this drastically improves the speed because most of the times the condition
+will return false and the second part will not be evaluated. THe same does not apply to the prefix algorithm.
+
+## Implementation Notes
+
+The strategy pattern is used in the `DequeAverageDeliveryTimeCalculator` class and the `PrefixAverageDeliveryTimeCalculator` class (both inherit from `MovingAverageCalculator`). This pattern provides flexibility and extensibility in the code. If new algorithms for calculating the average delivery times are needed in the future, they can be added by implementing the `MovingAverageCalculator` interface without modifying the existing code.
+
+## Tests
+
+Run a single test:
+
+```python3.7 -m unittest tests/test_default.py```
+
+Run all tests:
+
+```./run_tests.sh```
+
+## Test List
+
+- `test_0_events`: Tests CLI with an input file with 0 events. Raises an error.
+- `test_1_event`: Tests just 1 event. Valid case.
+- `test_2_events`: Tests 2 events. Valid case.
+- `test_default`: Test provided in the exercise. Valid case.
+- `test_different_window_size`: Tests the algorithm for different valid window sizes. Valid cases.
+- `test_end_year`: Tests events that happen on YYYY-12-31 23:59:SS. Valid case.
+- `test_invalid_cli`: Tests where CLI does not have `--input_file`, `--output_file`, or `--windows_size`. Raises an error.
+- `test_invalid_input`: Tests an input where the duration is a string instead of a number. Raises an error.
+- `test_leap_year`: Tests events that happen on 2022-02-28 23:59:SS (leap year) and non-leap year. Valid cases.
+- `test_multiple_events_window_1`: Big test. Empirical proof that the algorithm is better than the naive algorithm and that deque beats prefix. Valid case.
